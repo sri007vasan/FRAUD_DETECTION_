@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Fraud Detection System</h1>
+        <form id="fraudForm">
+            <label for="person_id">Enter Person ID:</label>
+            <input type="number" id="person_id" name="person_id" required>
+            <button type="submit">Detect Fraud</button>
+        </form>
+        <div id="result">
+            <p id="fraudPercentage"></p>
+            <div id="fraudChain" style="display: none;">
+                <button id="reportButton">Generate Fraud Report</button>
+                <ul id="fraudList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("fraudForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const personId = document.getElementById("person_id").value;
+            const response = await fetch("/detect", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ person_id: personId }),
+            });
+            const data = await response.json();
+            document.getElementById("fraudPercentage").innerText = `Fraud Likelihood: ${data.fraud_percentage}%`;
+
+            if (data.fraud_percentage > 70) {
+                document.getElementById("fraudChain").style.display = "block";
+                document.getElementById("reportButton").onclick = () => {
+                    const fraudList = document.getElementById("fraudList");
+                    fraudList.innerHTML = "";
+                    data.fraud_chain.forEach(person => {
+                        const li = document.createElement("li");
+                        li.innerText = `Person ID: ${person}`;
+                        fraudList.appendChild(li);
+                    });
+                };
+            } else {
+                document.getElementById("fraudChain").style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
